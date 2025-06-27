@@ -2,38 +2,38 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PetGO Map</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Doggo Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
   <style>
-    html, body, #map {
-      height: 100%;
+    html, body {
       margin: 0;
-      background: #fafafa;
+      height: 100%;
     }
-
-    .leaflet-popup-content {
-      font-family: sans-serif;
-      font-size: 14px;
-      padding: 5px;
+    #map {
+      height: 100%;
+      width: 100%;
     }
-
-    .marker-icon {
-      width: 32px;
-      height: 32px;
+    .custom-icon img {
       border-radius: 50%;
-      background-color: #ffffffdd;
-      padding: 2px;
-      box-shadow: 0 0 4px rgba(0,0,0,0.2);
+      border: 2px solid #4CAF50;
+      background: white;
+      box-shadow: 0 0 6px rgba(0,0,0,0.15);
     }
-
+    .leaflet-popup-content-wrapper {
+      border-radius: 12px;
+      background-color: #FAFAFA;
+      color: #212121;
+      font-family: 'SF Pro Text', sans-serif;
+    }
     @media (prefers-color-scheme: dark) {
-      body {
-        background: #121212;
+      .leaflet-popup-content-wrapper {
+        background-color: #212121;
+        color: #FAFAFA;
       }
-      .leaflet-popup-content {
-        color: #ffffff;
-        background-color: #2a2a2a;
+      .custom-icon img {
+        background: #212121;
+        border-color: #FF7043;
       }
     }
   </style>
@@ -41,83 +41,81 @@
 <body>
   <div id="map"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script>
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
     const map = L.map('map');
 
-    const lightTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap & Carto'
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    const lightTile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
     });
 
-    const darkTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap & Carto'
+    const darkTile = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_dark/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; Stadia Maps'
     });
 
     isDark ? darkTile.addTo(map) : lightTile.addTo(map);
 
-    // Центрирование карты на текущем пользователе
     map.locate({
       setView: true,
       maxZoom: 16,
-      watch: false,
       enableHighAccuracy: true
-    }).on('locationfound', function (e) {
-      L.circleMarker(e.latlng, {
-        radius: 6,
-        color: '#03a9f4',
-        fillColor: '#03a9f4',
-        fillOpacity: 1
-      }).addTo(map).bindPopup('Вы здесь').openPopup();
     });
 
-    // Добавим тестовые маркеры опасностей
+    const userIcon = L.icon({
+      iconUrl: 'https://raw.githubusercontent.com/dogandgo/doggo-map/main/other_svg_fin.svg',
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+      popupAnchor: [0, -10]
+    });
+
+    map.on('locationfound', function(e) {
+      L.marker(e.latlng, { icon: userIcon })
+        .addTo(map)
+        .bindPopup('Вы здесь')
+        .openPopup();
+    });
+
+    map.on('locationerror', function() {
+      alert('Не удалось определить местоположение. Пожалуйста, разрешите доступ к геолокации.');
+    });
+
+    // Пример меток опасностей
     const spots = [
       {
-        type: 'poison',
-        name: 'Яд возле парка',
-        coords: [53.9045, 27.5615],
-        icon: 'https://raw.githubusercontent.com/dogandgo/doggo-map/main/poison_svg_fin.svg'
-      },
-      {
+        coords: [53.9, 27.56],
         type: 'glass',
-        name: 'Стекло у тропинки',
-        coords: [53.902, 27.558],
-        icon: 'https://raw.githubusercontent.com/dogandgo/doggo-map/main/glass_svg_fin.svg'
+        label: 'Осторожно: стекло'
       },
       {
-        type: 'ice',
-        name: 'Скользко во дворе',
-        coords: [53.906, 27.565],
-        icon: 'https://raw.githubusercontent.com/dogandgo/doggo-map/main/ice_svg_fin.svg'
+        coords: [53.91, 27.55],
+        type: 'poison',
+        label: 'Возможно отравление'
       },
       {
+        coords: [53.92, 27.58],
         type: 'animal',
-        name: 'Агрессивная собака',
-        coords: [53.905, 27.567],
-        icon: 'https://raw.githubusercontent.com/dogandgo/doggo-map/main/animal_svg_fin.svg'
-      },
-      {
-        type: 'other',
-        name: 'Другое замечание',
-        coords: [53.903, 27.563],
-        icon: 'https://raw.githubusercontent.com/dogandgo/doggo-map/main/other_svg_fin.svg'
+        label: 'Агрессивное животное'
       }
     ];
 
+    const iconUrls = {
+      poison: 'https://raw.githubusercontent.com/dogandgo/doggo-map/main/poison_svg_fin.svg',
+      glass: 'https://raw.githubusercontent.com/dogandgo/doggo-map/main/glass_svg_fin.svg',
+      ice: 'https://raw.githubusercontent.com/dogandgo/doggo-map/main/ice_svg_fin.svg',
+      animal: 'https://raw.githubusercontent.com/dogandgo/doggo-map/main/animal_svg_fin.svg',
+      other: 'https://raw.githubusercontent.com/dogandgo/doggo-map/main/other_svg_fin.svg'
+    };
+
     spots.forEach(spot => {
       const icon = L.divIcon({
-        className: 'custom-marker',
-        html: `<div class="marker-icon"><img src="${spot.icon}" style="width:100%;height:100%;" /></div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-        popupAnchor: [0, -16]
+        html: `<img src="${iconUrls[spot.type]}" width="30" height="30" />`,
+        className: 'custom-icon',
+        iconSize: [30, 30]
       });
 
-      L.marker(spot.coords, { icon })
-        .addTo(map)
-        .bindPopup(`<strong>${spot.name}</strong>`);
+      L.marker(spot.coords, { icon }).addTo(map).bindPopup(spot.label);
     });
   </script>
 </body>
